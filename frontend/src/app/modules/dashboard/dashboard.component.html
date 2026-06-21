@@ -1,0 +1,180 @@
+<mat-sidenav-container class="sidenav-container">
+
+  <!-- ====== SIDENAV ====== -->
+  <mat-sidenav #sidenav
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="sidenavOpened"
+    class="app-sidenav">
+
+    <!-- Logo UNCHK -->
+    <div class="sidenav-logo">
+      <img src="assets/unchk-logo.png" alt="UNCHK" class="logo-img">
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- User profile -->
+    <div class="user-profile-panel">
+      <div class="user-avatar-sidenav">{{ getInitials() }}</div>
+      <div class="user-details">
+        <strong>{{ currentUser?.prenom }} {{ currentUser?.nom }}</strong>
+        <mat-chip class="role-chip">{{ getRoleLabel(currentUser?.role) }}</mat-chip>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Navigation -->
+    <mat-nav-list class="nav-list">
+      <a mat-list-item
+         *ngFor="let item of menuItems"
+         [routerLink]="item.route"
+         routerLinkActive="nav-active"
+         [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+         [matTooltip]="item.label"
+         matTooltipPosition="right">
+        <mat-icon matListItemIcon [matBadge]="item.badge" matBadgeColor="warn" [matBadgeHidden]="!item.badge" aria-hidden="false">
+          {{ item.icon }}
+        </mat-icon>
+        <span matListItemTitle>{{ item.label }}</span>
+      </a>
+    </mat-nav-list>
+
+    <!-- Spacer -->
+    <div class="sidenav-spacer"></div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Logout -->
+    <div class="sidenav-footer">
+      <button mat-button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Déconnexion
+      </button>
+    </div>
+
+  </mat-sidenav>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <mat-sidenav-content class="main-sidenav-content">
+
+    <!-- Toolbar -->
+    <mat-toolbar class="app-toolbar">
+      <button mat-icon-button (click)="sidenav.toggle()" class="menu-toggle">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <div class="toolbar-brand">
+        <span class="toolbar-title">Tableau de bord</span>
+        <span class="toolbar-subtitle">
+          {{ currentTime | date:"EEEE d MMMM yyyy" }}
+        </span>
+      </div>
+
+      <span class="toolbar-spacer"></span>
+
+      <!-- Notifications -->
+      <button mat-icon-button matTooltip="Notifications" [matBadge]="'3'" matBadgeColor="warn" aria-label="3 notifications">
+        <mat-icon>notifications</mat-icon>
+      </button>
+
+      <!-- User menu -->
+      <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-btn">
+        <div class="toolbar-avatar">{{ getInitials() }}</div>
+        <span class="user-name-toolbar">{{ currentUser?.prenom }}</span>
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu">
+        <div class="user-menu-header">
+          <strong>{{ currentUser?.prenom }} {{ currentUser?.nom }}</strong>
+          <small>{{ currentUser?.email }}</small>
+        </div>
+        <mat-divider></mat-divider>
+        <button mat-menu-item><mat-icon>person</mat-icon> Mon profil</button>
+        <button mat-menu-item><mat-icon>settings</mat-icon> Paramètres</button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()"><mat-icon>logout</mat-icon> Déconnexion</button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <!-- ======= PAGE CONTENT ======= -->
+    <div class="page-body">
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner animate-in" style="--delay:0s">
+        <div class="welcome-text">
+          <h2>Bonjour, {{ currentUser?.prenom }} 👋</h2>
+          <p>Voici un aperçu de l'activité de l'UNCHK aujourd'hui.</p>
+        </div>
+        <img src="assets/unchk-logo.png" alt="UNCHK" class="banner-logo">
+      </div>
+
+      <!-- Stats cards -->
+      <div class="stats-grid">
+        <div class="stat-card {{ s.color }} animate-in"
+             *ngFor="let s of stats; let i = index"
+             [style]="'--delay:' + (i * 0.1 + 0.1) + 's'">
+          <div class="stat-icon">
+            <mat-icon>{{ s.icon }}</mat-icon>
+          </div>
+          <div class="stat-info">
+            <strong>{{ s.value }}</strong>
+            <small>{{ s.label }}</small>
+          </div>
+          <div class="stat-trend">
+            <mat-icon class="trend-icon">trending_up</mat-icon>
+            <span>{{ s.trend }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content grid -->
+      <div class="content-grid">
+
+        <!-- Activités récentes -->
+        <mat-card class="activities-card animate-in" style="--delay:0.5s">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>timeline</mat-icon>
+            <mat-card-title>Activités récentes</mat-card-title>
+            <mat-card-subtitle>Dernières actions sur la plateforme</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-list>
+              <mat-list-item *ngFor="let a of activities; let i = index"
+                             class="activity-item animate-in"
+                             [style]="'--delay:' + (i * 0.08 + 0.6) + 's'">
+                <div class="activity-icon-wrap activity-{{ a.color }}" matListItemIcon>
+                  <mat-icon>{{ a.icon }}</mat-icon>
+                </div>
+                <span matListItemTitle>{{ a.text }}</span>
+                <span matListItemLine class="activity-time">{{ a.time }}</span>
+              </mat-list-item>
+            </mat-list>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Accès rapide -->
+        <mat-card class="quick-card animate-in" style="--delay:0.55s">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>apps</mat-icon>
+            <mat-card-title>Accès rapide</mat-card-title>
+            <mat-card-subtitle>Naviguez vers vos modules</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content class="quick-links-grid">
+            <a *ngFor="let item of menuItems.slice(1)"
+               [routerLink]="item.route"
+               class="quick-link-item animate-in">
+              <div class="quick-link-icon">
+                <mat-icon>{{ item.icon }}</mat-icon>
+              </div>
+              <span>{{ item.label }}</span>
+            </a>
+          </mat-card-content>
+        </mat-card>
+
+      </div>
+    </div>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

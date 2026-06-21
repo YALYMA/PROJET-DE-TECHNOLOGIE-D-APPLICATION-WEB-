@@ -1,0 +1,31 @@
+<div class="app-wrapper" [class.loaded]="isLoaded">
+
+  <!-- ======= SPLASH SCREEN ======= -->
+  <div class="splash-screen" *ngIf="!isLoaded">
+    <div class="splash-bg"></div>
+    <div class="splash-content">
+      <img src="assets/unchk-logo.png" alt="Logo UNCHK" class="splash-logo">
+      <p class="splash-tagline">Plateforme de Gestion Académique</p>
+      <div class="splash-progress">
+        <mat-progress-bar mode="determinate" [value]="loadProgress" color="accent"></mat-progress-bar>
+        <span>Chargement {{ loadProgress }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= TOAST NOTIFICATIONS ======= -->
+  <div class="toast-container">
+    <div *ngFor="let toast of toasts"
+         class="toast toast-{{ toast.type }}">
+      <span class="toast-icon material-icons">{{ toast.icon }}</span>
+      <span class="toast-message">{{ toast.message }}</span>
+      <button class="toast-close" (click)="removeToast(toast)">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======= MAIN APP ======= -->
+  <router-outlet></router-outlet>
+
+</div>

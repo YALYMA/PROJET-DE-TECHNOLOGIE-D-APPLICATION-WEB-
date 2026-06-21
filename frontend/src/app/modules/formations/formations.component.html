@@ -1,0 +1,201 @@
+<div class="page-container">
+
+  <!-- Header -->
+    <!-- Bouton retour dashboard -->
+  <div class="back-bar">
+    <button mat-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Retour au tableau de bord
+    </button>
+  </div>
+
+<div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>menu_book</mat-icon> Formations</h1>
+      <p class="page-subtitle">Catalogue des formations — UNCHK</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openForm()" *ngIf="canEdit()">
+      <mat-icon>add</mat-icon> Nouvelle formation
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card {{ s.color }} animate-in"
+         *ngFor="let s of stats; let i = index" [style]="'--delay:' + (i*0.08)+'s'">
+      <div class="stat-icon"><mat-icon>{{ s.icon }}</mat-icon></div>
+      <div class="stat-info"><strong>{{ s.value }}</strong><small>{{ s.label }}</small></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filter-card animate-in" style="--delay:0.35s">
+    <mat-card-content>
+      <div class="filter-row">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Rechercher</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="searchTerm" placeholder="Nom de la formation...">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Type</mat-label>
+          <mat-select [(ngModel)]="filterType">
+            <mat-option value="">Tous</mat-option>
+            <mat-option value="INITIALE">Initiale</mat-option>
+            <mat-option value="CONTINUE">Continue</mat-option>
+            <mat-option value="CERTIFIANTE">Certifiante</mat-option>
+            <mat-option value="DIPLOMANTE">Diplômante</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+          <mat-select [(ngModel)]="filterStatut">
+            <mat-option value="">Tous</mat-option>
+            <mat-option value="ACTIVE">Active</mat-option>
+            <mat-option value="TERMINEE">Terminée</mat-option>
+            <mat-option value="SUSPENDUE">Suspendue</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div class="loading-center" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="50" color="primary"></mat-progress-spinner>
+  </div>
+
+  <!-- Grid de cartes -->
+  <div class="formations-grid" *ngIf="!loading">
+    <mat-card class="formation-card animate-in"
+              *ngFor="let f of filtered; let i = index"
+              [style]="'--delay:' + (i*0.06+0.4)+'s'">
+
+      <div class="card-top type-{{ f.type?.toLowerCase() }}">
+        <span class="badge {{ typeColor(f.type) }}">{{ f.type }}</span>
+        <span class="badge {{ statutColor(f.statut) }}">{{ f.statut }}</span>
+      </div>
+
+      <mat-card-header>
+        <mat-card-title>{{ f.nom }}</mat-card-title>
+        <mat-card-subtitle>
+          <mat-icon>grade</mat-icon> {{ f.niveau }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="info-row">
+          <mat-icon>calendar_today</mat-icon>
+          <span>{{ f.dateDebut | date:'MMM yyyy' }} → {{ f.dateFin | date:'MMM yyyy' }}</span>
+        </div>
+        <div class="info-row">
+          <mat-icon>people</mat-icon>
+          <span>{{ f.nbreFormesH + f.nbreFormesF }} formés ({{ f.nbreFormesH }}H / {{ f.nbreFormesF }}F)</span>
+        </div>
+        <div class="info-row" *ngIf="f.montantFinancement">
+          <mat-icon>payments</mat-icon>
+          <span class="budget-text">{{ f.montantFinancement | number }} FCFA</span>
+        </div>
+        <div class="info-row" *ngIf="f.responsable">
+          <mat-icon>person</mat-icon>
+          <span>{{ f.responsable }}</span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end" *ngIf="canEdit()">
+        <button mat-icon-button color="primary" (click)="openForm(f)" matTooltip="Modifier">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="delete(f.id)" matTooltip="Supprimer">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <div class="empty-state" *ngIf="filtered.length === 0">
+      <mat-icon>school</mat-icon>
+      <p>Aucune formation trouvée</p>
+    </div>
+  </div>
+
+  <!-- Side Form -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+  <div class="side-form" [class.open]="showForm">
+    <div class="side-form-header">
+      <h2><mat-icon>{{ editMode ? 'edit' : 'add' }}</mat-icon> {{ editMode ? 'Modifier' : 'Nouvelle' }} formation</h2>
+      <button mat-icon-button (click)="closeForm()"><mat-icon>close</mat-icon></button>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="side-form-body">
+      <mat-form-field appearance="outline">
+        <mat-label>Nom de la formation *</mat-label>
+        <input matInput formControlName="nom">
+        <mat-error>Requis</mat-error>
+      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Type *</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="INITIALE">Initiale</mat-option>
+            <mat-option value="CONTINUE">Continue</mat-option>
+            <mat-option value="CERTIFIANTE">Certifiante</mat-option>
+            <mat-option value="DIPLOMANTE">Diplômante</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Niveau</mat-label>
+          <input matInput formControlName="niveau" placeholder="Bac+5">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Date début</mat-label>
+          <input matInput type="date" formControlName="dateDebut">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Date fin</mat-label>
+          <input matInput type="date" formControlName="dateFin">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Formés (H)</mat-label>
+          <input matInput type="number" formControlName="nbreFormesH">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Formées (F)</mat-label>
+          <input matInput type="number" formControlName="nbreFormesF">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Budget (FCFA)</mat-label>
+          <input matInput type="number" formControlName="montantFinancement">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Financement</mat-label>
+          <mat-select formControlName="typeFinancement">
+            <mat-option value="PUBLIC">Public</mat-option>
+            <mat-option value="PRIVE">Privé</mat-option>
+            <mat-option value="MIXTE">Mixte</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-form-field appearance="outline">
+        <mat-label>Statut</mat-label>
+        <mat-select formControlName="statut">
+          <mat-option value="ACTIVE">Active</mat-option>
+          <mat-option value="TERMINEE">Terminée</mat-option>
+          <mat-option value="SUSPENDUE">Suspendue</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="form-actions">
+        <button mat-button type="button" (click)="closeForm()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <mat-spinner diameter="18" *ngIf="saving"></mat-spinner>
+          <mat-icon *ngIf="!saving">save</mat-icon>
+          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

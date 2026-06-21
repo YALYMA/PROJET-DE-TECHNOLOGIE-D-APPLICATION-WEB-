@@ -1,0 +1,63 @@
+<div class="login-page">
+  <div class="bg-animated">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+  </div>
+
+  <div class="login-wrapper">
+    <!-- Logo UNCHK -->
+    <div class="login-logo animate-in" style="--delay:0s">
+      <img src="assets/unchk-logo.png" alt="Logo UNCHK" />
+      <p class="login-tagline">Plateforme de Gestion Académique</p>
+    </div>
+
+    <!-- Card connexion -->
+    <mat-card class="login-card animate-in" style="--delay:0.2s">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>lock_open</mat-icon>
+          Connexion
+        </mat-card-title>
+        <mat-card-subtitle>Accédez à votre espace universitaire</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="submit()" class="login-form">
+
+          <mat-form-field appearance="outline">
+            <mat-label>Adresse e-mail</mat-label>
+            <input matInput type="email" formControlName="email"
+                   placeholder="prenom.nom@unchk.edu.sn">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('required')">E-mail obligatoire</mat-error>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Format d'e-mail invalide</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mot de passe</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Mot de passe obligatoire</mat-error>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">Minimum 6 caractères</mat-error>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit"
+                  class="submit-btn" [disabled]="loading">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <mat-icon *ngIf="!loading">login</mat-icon>
+            {{ loading ? 'Connexion en cours...' : 'Se connecter' }}
+          </button>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <p class="login-footer animate-in" style="--delay:0.4s">
+      © {{ 2026 }} Université Numérique Cheikh Hamidou Kane
+    </p>
+  </div>
+</div>

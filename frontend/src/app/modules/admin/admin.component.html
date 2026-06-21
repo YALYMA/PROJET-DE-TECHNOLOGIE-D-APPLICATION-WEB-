@@ -1,0 +1,133 @@
+<div class="page-container">
+    <!-- Bouton retour dashboard -->
+  <div class="back-bar">
+    <button mat-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Retour au tableau de bord
+    </button>
+  </div>
+
+<div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>admin_panel_settings</mat-icon> Administration</h1>
+      <p class="page-subtitle">Gestion documentaire, budgétaire et ressources humaines</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="showForm = true" *ngIf="canManage() && activeTab === 0">
+      <mat-icon>add</mat-icon> Nouveau courrier
+    </button>
+  </div>
+
+  <mat-tab-group [(selectedIndex)]="activeTab" class="admin-tabs animate-in" style="--delay:0s">
+
+    <!-- COURRIERS -->
+    <mat-tab label="📬 Courriers">
+      <div class="tab-content">
+        <table mat-table [dataSource]="courriers" class="admin-table">
+          <ng-container matColumnDef="reference">
+            <th mat-header-cell *matHeaderCellDef>Référence</th>
+            <td mat-cell *matCellDef="let c">
+              <code class="ref-code">{{ c.reference }}</code>
+              <mat-icon *ngIf="c.urgent" class="urgent-icon" matTooltip="Urgent">priority_high</mat-icon>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="objet">
+            <th mat-header-cell *matHeaderCellDef>Objet</th>
+            <td mat-cell *matCellDef="let c">{{ c.objet }}</td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let c"><span class="badge info">{{ typeLabel(c.type) }}</span></td>
+          </ng-container>
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let c">{{ c.date | date:'dd/MM/yyyy' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef>Statut</th>
+            <td mat-cell *matCellDef="let c"><span class="badge {{ statutColor(c.statut) }}">{{ c.statut }}</span></td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="courrierColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: courrierColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+
+    <!-- BUDGET -->
+    <mat-tab label="💰 Budget">
+      <div class="tab-content">
+        <div class="budget-grid">
+          <mat-card class="budget-card">
+            <mat-card-header><mat-card-title><mat-icon>article</mat-icon> Budget prévisionnel 2026</mat-card-title></mat-card-header>
+            <mat-card-content>
+              <div class="budget-total">{{ budget.previsionnel | number }} FCFA</div>
+              <div class="budget-lines">
+                <div class="budget-line" *ngFor="let l of budget.lignes">
+                  <span>{{ l.poste }}</span>
+                  <mat-progress-bar mode="determinate" [value]="lignePct(l.montant)" color="primary"></mat-progress-bar>
+                  <strong>{{ l.montant | number }}</strong>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="budget-card">
+            <mat-card-header><mat-card-title><mat-icon>check_circle</mat-icon> Budget réalisé</mat-card-title></mat-card-header>
+            <mat-card-content>
+              <div class="budget-total green">{{ budget.realise | number }} FCFA</div>
+              <p class="taux-label">Taux d'exécution : <strong>{{ tauxExec }}%</strong></p>
+              <mat-progress-bar mode="determinate" [value]="tauxExec" color="accent" class="exec-bar"></mat-progress-bar>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- RH -->
+    <mat-tab label="👥 Ressources Humaines">
+      <div class="tab-content">
+        <div class="rh-stats-grid">
+          <div class="rh-mini-card" *ngFor="let r of rhStats">
+            <mat-icon>{{ r.icon }}</mat-icon>
+            <strong>{{ r.value }}</strong>
+            <small>{{ r.label }}</small>
+          </div>
+        </div>
+        <table mat-table [dataSource]="personnel" class="admin-table">
+          <ng-container matColumnDef="matricule"><th mat-header-cell *matHeaderCellDef>Matricule</th><td mat-cell *matCellDef="let p"><code class="ref-code">{{ p.matricule }}</code></td></ng-container>
+          <ng-container matColumnDef="nom"><th mat-header-cell *matHeaderCellDef>Nom</th><td mat-cell *matCellDef="let p"><strong>{{ p.nom }}</strong></td></ng-container>
+          <ng-container matColumnDef="poste"><th mat-header-cell *matHeaderCellDef>Poste</th><td mat-cell *matCellDef="let p">{{ p.poste }}</td></ng-container>
+          <ng-container matColumnDef="departement"><th mat-header-cell *matHeaderCellDef>Département</th><td mat-cell *matCellDef="let p">{{ p.departement }}</td></ng-container>
+          <ng-container matColumnDef="dateEntree"><th mat-header-cell *matHeaderCellDef>Date entrée</th><td mat-cell *matCellDef="let p">{{ p.dateEntree | date:'dd/MM/yyyy' }}</td></ng-container>
+          <ng-container matColumnDef="actif"><th mat-header-cell *matHeaderCellDef>Statut</th><td mat-cell *matCellDef="let p"><span class="badge {{ p.actif ? 'success' : 'danger' }}">{{ p.actif ? 'Actif' : 'Inactif' }}</span></td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="personnelColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: personnelColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Courrier form -->
+  <div class="form-overlay" *ngIf="showForm" (click)="showForm = false"></div>
+  <div class="side-form" [class.open]="showForm">
+    <div class="side-form-header">
+      <h2><mat-icon>mail</mat-icon> Nouveau courrier</h2>
+      <button mat-icon-button (click)="showForm = false"><mat-icon>close</mat-icon></button>
+    </div>
+    <form [formGroup]="courrierForm" (ngSubmit)="saveCourrier()" class="side-form-body">
+      <div class="form-row">
+        <mat-form-field appearance="outline"><mat-label>Référence *</mat-label><input matInput formControlName="reference"><mat-error>Requis</mat-error></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Type</mat-label><mat-select formControlName="type"><mat-option value="COURRIER_ARRIVE">Arrivée</mat-option><mat-option value="COURRIER_DEPART">Départ</mat-option><mat-option value="NOTE_SERVICE">Note service</mat-option><mat-option value="CIRCULAIRE">Circulaire</mat-option></mat-select></mat-form-field>
+      </div>
+      <mat-form-field appearance="outline"><mat-label>Objet *</mat-label><input matInput formControlName="objet"><mat-error>Requis</mat-error></mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="outline"><mat-label>Expéditeur</mat-label><input matInput formControlName="expediteur"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Destinataire</mat-label><input matInput formControlName="destinataire"></mat-form-field>
+      </div>
+      <mat-form-field appearance="outline"><mat-label>Date</mat-label><input matInput type="date" formControlName="date"></mat-form-field>
+      <mat-checkbox formControlName="urgent" color="warn">Marquer comme urgent</mat-checkbox>
+      <div class="form-actions">
+        <button mat-button type="button" (click)="showForm = false">Annuler</button>
+        <button mat-raised-button color="primary" type="submit"><mat-icon>save</mat-icon> Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,209 @@
+<div class="page-container">
+    <!-- Bouton retour dashboard -->
+  <div class="back-bar">
+    <button mat-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Retour au tableau de bord
+    </button>
+  </div>
+
+<div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>person_pin</mat-icon> Formateurs</h1>
+      <p class="page-subtitle">Corps enseignant — UNCHK</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openForm()" *ngIf="canEdit()">
+      <mat-icon>person_add</mat-icon> Ajouter
+    </button>
+  </div>
+
+  <!-- Type stats -->
+  <div class="type-stats animate-in" style="--delay:0s">
+    <div class="type-stat {{ s.color }}" *ngFor="let s of typeStats">
+      <strong>{{ s.value }}</strong><span>{{ s.label }}</span>
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <mat-card class="table-card animate-in" style="--delay:0.2s">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>people</mat-icon>
+      <mat-card-title>Liste des formateurs</mat-card-title>
+      <mat-card-subtitle>{{ dataSource.data.length }} formateur(s)</mat-card-subtitle>
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Rechercher</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Nom, matricule...">
+      </mat-form-field>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="loading-center" *ngIf="loading">
+        <mat-progress-spinner mode="indeterminate" diameter="40" color="primary"></mat-progress-spinner>
+      </div>
+
+      <div *ngIf="!loading">
+        <table mat-table [dataSource]="dataSource" matSort class="formateurs-table">
+
+          <ng-container matColumnDef="matricule">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Matricule</th>
+            <td mat-cell *matCellDef="let f"><code class="matric-code">{{ f.matricule }}</code></td>
+          </ng-container>
+
+          <ng-container matColumnDef="nom">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Formateur</th>
+            <td mat-cell *matCellDef="let f">
+              <div class="formateur-cell">
+                <div class="fav-avatar type-{{ f.type?.toLowerCase().replace('_','-') }}">
+                  {{ f.nom[0] }}{{ f.prenom[0] }}
+                </div>
+                <div>
+                  <strong>{{ f.nom }} {{ f.prenom }}</strong>
+                  <small>{{ f.email }}</small>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+            <td mat-cell *matCellDef="let f">
+              <span class="badge {{ typeColor(f.type) }}">{{ typeLabel(f.type) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="specialite">
+            <th mat-header-cell *matHeaderCellDef>Spécialité</th>
+            <td mat-cell *matCellDef="let f">{{ f.specialite }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="heures">
+            <th mat-header-cell *matHeaderCellDef>Heures</th>
+            <td mat-cell *matCellDef="let f">
+              <div class="heures-cell">
+                <mat-progress-bar mode="determinate" [value]="heuresPct(f)"
+                  [color]="heuresPct(f) > 80 ? 'warn' : 'primary'"></mat-progress-bar>
+                <span>{{ f.heuresEffectuees }}/{{ f.heuresMax }}h</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef>Statut</th>
+            <td mat-cell *matCellDef="let f">
+              <span class="badge {{ f.statut === 'ACTIF' ? 'success' : 'danger' }}">{{ f.statut }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Colonne actions : ng-container + ngIf sur des div internes, pas sur td -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let f">
+              <div *ngIf="canEdit(); else noActions">
+                <button mat-icon-button color="primary"
+                        (click)="openForm(f)" matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn"
+                        (click)="delete(f.id)" matTooltip="Supprimer">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <ng-template #noActions>—</ng-template>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+        </table>
+        <mat-paginator [pageSizeOptions]="[10,25]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Side Form -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+  <div class="side-form" [class.open]="showForm">
+    <div class="side-form-header">
+      <h2>
+        <mat-icon>{{ editMode ? 'edit' : 'person_add' }}</mat-icon>
+        {{ editMode ? 'Modifier' : 'Ajouter' }} un formateur
+      </h2>
+      <button mat-icon-button (click)="closeForm()"><mat-icon>close</mat-icon></button>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="side-form-body">
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Matricule *</mat-label>
+          <input matInput formControlName="matricule">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Type *</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="ENSEIGNANT">Enseignant</mat-option>
+            <mat-option value="ENSEIGNANT_ASSOCIE">Ens. associé</mat-option>
+            <mat-option value="TUTEUR">Tuteur</mat-option>
+            <mat-option value="RESPONSABLE_FORMATION">Responsable</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Nom *</mat-label>
+          <input matInput formControlName="nom">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Prénom *</mat-label>
+          <input matInput formControlName="prenom">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email *</mat-label>
+        <input matInput type="email" formControlName="email">
+        <mat-icon matPrefix>email</mat-icon>
+        <mat-error>Email valide requis</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Téléphone</mat-label>
+        <input matInput formControlName="telephone">
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Spécialité</mat-label>
+        <input matInput formControlName="specialite">
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Heures max</mat-label>
+          <input matInput type="number" formControlName="heuresMax">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+          <mat-select formControlName="statut">
+            <mat-option value="ACTIF">Actif</mat-option>
+            <mat-option value="INACTIF">Inactif</mat-option>
+            <mat-option value="CONGE">Congé</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="closeForm()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <mat-progress-spinner diameter="18" *ngIf="saving" mode="indeterminate"></mat-progress-spinner>
+          <mat-icon *ngIf="!saving">save</mat-icon>
+          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

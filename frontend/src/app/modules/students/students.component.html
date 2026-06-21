@@ -1,0 +1,265 @@
+<div class="page-container">
+
+  <!-- Header -->
+    <!-- Bouton retour dashboard -->
+  <div class="back-bar">
+    <button mat-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Retour au tableau de bord
+    </button>
+  </div>
+
+<div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <mat-icon>school</mat-icon>
+        Étudiants
+      </h1>
+      <p class="page-subtitle">Gestion des apprenants — UNCHK</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button [matMenuTriggerFor]="exportMenu" class="export-btn">
+        <mat-icon>download</mat-icon> Exporter
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item (click)="exportPdf()">
+          <mat-icon color="warn">picture_as_pdf</mat-icon> Export PDF
+        </button>
+        <button mat-menu-item (click)="exportExcel()">
+          <mat-icon color="primary">table_chart</mat-icon> Export Excel
+        </button>
+      </mat-menu>
+      <button mat-raised-button color="primary" (click)="openForm()" *ngIf="canEdit()">
+        <mat-icon>person_add</mat-icon> Ajouter
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card {{ s.color }} animate-in"
+         *ngFor="let s of stats; let i = index"
+         [style]="'--delay:' + (i * 0.08) + 's'">
+      <div class="stat-icon"><mat-icon>{{ s.icon }}</mat-icon></div>
+      <div class="stat-info">
+        <strong>{{ s.value }}</strong>
+        <small>{{ s.label }}</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table card -->
+  <mat-card class="table-card animate-in" style="--delay:0.4s">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>list</mat-icon>
+      <mat-card-title>Liste des étudiants</mat-card-title>
+      <mat-card-subtitle>{{ dataSource.data.length }} étudiant(s) au total</mat-card-subtitle>
+
+      <!-- Search -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Rechercher...</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Nom, INE, formation...">
+      </mat-form-field>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <!-- Loading -->
+      <div class="loading-center" *ngIf="loading">
+        <mat-progress-spinner mode="indeterminate" diameter="50" color="primary"></mat-progress-spinner>
+        <p>Chargement des étudiants...</p>
+      </div>
+
+      <!-- Table -->
+      <div class="mat-elevation-z0" *ngIf="!loading">
+        <table mat-table [dataSource]="dataSource" matSort class="students-table">
+
+          <!-- INE -->
+          <ng-container matColumnDef="ine">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>INE</th>
+            <td mat-cell *matCellDef="let s"><code class="ine-code">{{ s.ine }}</code></td>
+          </ng-container>
+
+          <!-- Nom -->
+          <ng-container matColumnDef="nom">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Étudiant</th>
+            <td mat-cell *matCellDef="let s">
+              <div class="student-cell">
+                <div class="student-avatar" [class.female]="s.genre === 'F'">
+                  {{ s.nom[0] }}{{ s.prenom[0] }}
+                </div>
+                <div>
+                  <strong>{{ s.nom }} {{ s.prenom }}</strong>
+                  <small>{{ s.email }}</small>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Formation -->
+          <ng-container matColumnDef="formation">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Formation</th>
+            <td mat-cell *matCellDef="let s">{{ s.formation }}</td>
+          </ng-container>
+
+          <!-- Promo -->
+          <ng-container matColumnDef="promo">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Promo</th>
+            <td mat-cell *matCellDef="let s">
+              <span class="promo-badge">{{ s.promo }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Statut -->
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
+            <td mat-cell *matCellDef="let s">
+              <span class="badge {{ statutColor(s.statut) }}">{{ s.statut }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Genre -->
+          <ng-container matColumnDef="genre">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Genre</th>
+            <td mat-cell *matCellDef="let s">
+              <mat-icon [class]="s.genre === 'F' ? 'icon-female' : 'icon-male'">
+                {{ s.genre === 'F' ? 'woman' : 'man' }}
+              </mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let s">
+              <div class="row-actions">
+                <button mat-icon-button color="primary"
+                        (click)="openForm(s)" *ngIf="canEdit()"
+                        matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn"
+                        (click)="delete(s.id)" *ngIf="canEdit()"
+                        matTooltip="Supprimer">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="student-row"></tr>
+
+          <!-- No data -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              <div class="empty-state">
+                <mat-icon>search_off</mat-icon>
+                <p>Aucun étudiant trouvé</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ===== SIDE FORM ===== -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+  <div class="side-form" [class.open]="showForm">
+    <div class="side-form-header">
+      <h2>
+        <mat-icon>{{ editMode ? 'edit' : 'person_add' }}</mat-icon>
+        {{ editMode ? 'Modifier' : 'Ajouter' }} un étudiant
+      </h2>
+      <button mat-icon-button (click)="closeForm()"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <form [formGroup]="studentForm" (ngSubmit)="save()" class="side-form-body">
+
+      <mat-form-field appearance="outline">
+        <mat-label>INE *</mat-label>
+        <input matInput formControlName="ine" placeholder="UCK2024001">
+        <mat-icon matPrefix>badge</mat-icon>
+        <mat-error>INE obligatoire</mat-error>
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Nom *</mat-label>
+          <input matInput formControlName="nom">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Prénom *</mat-label>
+          <input matInput formControlName="prenom">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email *</mat-label>
+        <input matInput type="email" formControlName="email">
+        <mat-icon matPrefix>email</mat-icon>
+        <mat-error>Email valide requis</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Téléphone</mat-label>
+        <input matInput formControlName="telephone">
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Formation *</mat-label>
+        <mat-select formControlName="formation">
+          <mat-option *ngFor="let f of formations" [value]="f">{{ f }}</mat-option>
+        </mat-select>
+        <mat-error>Requis</mat-error>
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Promotion *</mat-label>
+          <input matInput formControlName="promo" placeholder="2024">
+          <mat-error>Requis</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Genre *</mat-label>
+          <mat-select formControlName="genre">
+            <mat-option value="M">Masculin</mat-option>
+            <mat-option value="F">Féminin</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Statut</mat-label>
+        <mat-select formControlName="statut">
+          <mat-option value="ACTIF">Actif</mat-option>
+          <mat-option value="DIPLOME">Diplômé</mat-option>
+          <mat-option value="ABANDON">Abandon</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date de naissance</mat-label>
+        <input matInput type="date" formControlName="dateNaissance">
+        <mat-icon matPrefix>cake</mat-icon>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="closeForm()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <mat-spinner diameter="18" *ngIf="saving"></mat-spinner>
+          <mat-icon *ngIf="!saving">save</mat-icon>
+          {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>

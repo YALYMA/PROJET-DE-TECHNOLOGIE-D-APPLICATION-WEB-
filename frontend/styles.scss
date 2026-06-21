@@ -1,0 +1,229 @@
+// ============================================================
+// UNCHK Global Styles — Angular Material 20 (M3 API)
+// ============================================================
+
+// Angular Material 20 : on n'importe plus @use mat avec define-palette
+// Le thème est configuré via angular.json ou via le prebuilt theme
+// On utilise indigo-pink comme base et on surcharge avec nos CSS vars
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+// ============================================================
+// CSS VARIABLES UNCHK
+// ============================================================
+:root {
+  --unchk-blue:        #1565c0;
+  --unchk-blue-light:  #2563eb;
+  --unchk-blue-dark:   #0d47a1;
+  --unchk-green:       #2e7d32;
+  --unchk-green-light: #43a047;
+  --unchk-orange:      #e65100;
+  --unchk-orange-light:#f57c00;
+  --unchk-navy:        #0d2137;
+  --unchk-white:       #ffffff;
+  --unchk-bg:          #f0f4f8;
+  --unchk-surface:     #ffffff;
+  --unchk-border:      #e2e8f0;
+
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// ============================================================
+// RESET & BASE
+// ============================================================
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--unchk-bg);
+  color: var(--gray-800);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ============================================================
+// SURCHARGE MATERIAL — couleurs UNCHK
+// ============================================================
+.mat-mdc-raised-button.mat-primary { background-color: var(--unchk-blue) !important; }
+.mat-mdc-raised-button.mat-accent  { background-color: var(--unchk-green) !important; }
+
+.mat-mdc-card {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.mat-mdc-header-cell {
+  background: var(--unchk-navy) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mat-mdc-row:hover { background: var(--gray-50) !important; }
+
+// ============================================================
+// UTILITAIRES GLOBAUX
+// ============================================================
+.page-container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+}
+
+.page-title {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 1.75rem; font-weight: 800; color: var(--unchk-navy); margin: 0;
+  mat-icon { color: var(--unchk-blue); font-size: 2rem; }
+}
+
+.page-subtitle { color: var(--gray-500); font-size: 0.9rem; margin-top: 0.25rem; }
+
+// Stat cards
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  padding: 1.5rem; border-radius: var(--radius-lg); color: white;
+  display: flex; align-items: center; gap: 1rem;
+  position: relative; overflow: hidden; box-shadow: var(--shadow-md);
+  .stat-icon {
+    width: 52px; height: 52px; background: rgba(255,255,255,0.2);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    mat-icon { font-size: 1.8rem; color: white; }
+  }
+  .stat-info {
+    strong { display: block; font-size: 2rem; font-weight: 800; line-height: 1; }
+    small  { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; display: block; }
+  }
+  &.blue   { background: linear-gradient(135deg, #1565c0, #2563eb); }
+  &.green  { background: linear-gradient(135deg, #2e7d32, #43a047); }
+  &.orange { background: linear-gradient(135deg, #e65100, #f57c00); }
+  &.purple { background: linear-gradient(135deg, #4527a0, #7c3aed); }
+  &.teal   { background: linear-gradient(135deg, #00695c, #00897b); }
+  &.red    { background: linear-gradient(135deg, #b71c1c, #e53935); }
+}
+
+// Badges
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0.25rem 0.75rem; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600;
+  &::before { content: '●'; font-size: 0.6rem; }
+  &.success { background: #dcfce7; color: #166534; }
+  &.warning { background: #fef9c3; color: #854d0e; }
+  &.danger  { background: #fee2e2; color: #991b1b; }
+  &.info    { background: #dbeafe; color: #1e40af; }
+  &.gray    { background: var(--gray-100); color: var(--gray-600); }
+  &.purple  { background: #ede9fe; color: #6d28d9; }
+}
+
+// Table wrapper
+.table-wrapper {
+  background: white; border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-md);
+}
+
+// Empty state
+.empty-state {
+  text-align: center; padding: 4rem 2rem; color: var(--gray-400);
+  mat-icon { font-size: 4rem; display: block; margin-bottom: 1rem; }
+}
+
+.loading-center {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4rem; gap: 1rem; color: var(--gray-400);
+}
+
+// Side form (panneau coulissant)
+.form-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 999; backdrop-filter: blur(4px);
+}
+
+.side-form {
+  position: fixed; top: 0; right: -520px; width: 480px;
+  height: 100vh; background: white; z-index: 1000;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.2);
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex; flex-direction: column;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  overflow: hidden;
+  &.open { right: 0; }
+}
+
+.side-form-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem; background: var(--unchk-navy);
+  h2 {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin: 0; color: white; font-size: 1.1rem;
+    mat-icon { color: rgba(255,255,255,0.8); }
+  }
+  button { color: rgba(255,255,255,0.7) !important; }
+}
+
+.side-form-body {
+  flex: 1; overflow-y: auto; padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.form-actions {
+  display: flex; justify-content: flex-end; gap: 0.75rem;
+  margin-top: 1rem; padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+// Animations
+.animate-in {
+  animation: fadeInUp 0.5s ease forwards;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .page-container { padding: 1rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .side-form { width: 100%; border-radius: 0; }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}

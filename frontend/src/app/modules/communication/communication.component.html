@@ -1,0 +1,95 @@
+<div class="page-container">
+    <!-- Bouton retour dashboard -->
+  <div class="back-bar">
+    <button mat-button class="back-btn" routerLink="/dashboard">
+      <mat-icon>arrow_back</mat-icon>
+      Retour au tableau de bord
+    </button>
+  </div>
+
+<div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>campaign</mat-icon> Communication</h1>
+      <p class="page-subtitle">Comptes rendus, circulaires et notifications — UNCHK</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openForm()" *ngIf="canCreate()">
+      <mat-icon>add</mat-icon> Nouveau document
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <mat-tab-group [(selectedIndex)]="activeTab" class="comm-tabs animate-in" style="--delay:0s">
+    <mat-tab *ngFor="let t of typeFilters">
+      <ng-template mat-tab-label>
+        <span>{{ t }}</span>
+        <span class="tab-badge" *ngIf="countOf(t) > 0">{{ countOf(t) }}</span>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+
+  <div class="loading-center" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="48" color="primary"></mat-progress-spinner>
+  </div>
+
+  <!-- Liste -->
+  <div class="cr-list" *ngIf="!loading">
+    <mat-card class="cr-card animate-in"
+              *ngFor="let cr of filtered; let i = index"
+              [style]="'--delay:' + (i*0.07+0.1)+'s'">
+      <div class="cr-left">
+        <div class="cr-icon type-{{ cr.type?.toLowerCase() }}">
+          <mat-icon>{{ typeIcon(cr.type) }}</mat-icon>
+        </div>
+      </div>
+      <div class="cr-body">
+        <div class="cr-top-row">
+          <h3>{{ cr.titre }}</h3>
+          <div class="cr-badges">
+            <span class="type-chip chip-{{ cr.type?.toLowerCase() }}">{{ cr.type }}</span>
+            <span class="publie-chip" [class.publie]="cr.publie">{{ cr.publie ? 'Publié' : 'Brouillon' }}</span>
+          </div>
+        </div>
+        <p class="cr-contenu">{{ cr.contenu | slice:0:160 }}{{ cr.contenu?.length > 160 ? '...' : '' }}</p>
+        <div class="cr-meta">
+          <span><mat-icon>person</mat-icon> {{ cr.auteur }}</span>
+          <span><mat-icon>calendar_today</mat-icon> {{ cr.date | date:'dd/MM/yyyy' }}</span>
+          <span><mat-icon>group</mat-icon> {{ cr.roleCible }}</span>
+        </div>
+      </div>
+      <div class="cr-actions" *ngIf="canCreate()">
+        <button mat-icon-button color="primary" (click)="openForm(cr)" matTooltip="Modifier"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button color="warn" (click)="delete(cr.id)" matTooltip="Supprimer"><mat-icon>delete</mat-icon></button>
+      </div>
+    </mat-card>
+
+    <div class="empty-state" *ngIf="filtered.length === 0">
+      <mat-icon>description</mat-icon><p>Aucun document dans cette catégorie</p>
+    </div>
+  </div>
+
+  <!-- Side form -->
+  <div class="form-overlay" *ngIf="showForm" (click)="closeForm()"></div>
+  <div class="side-form" [class.open]="showForm">
+    <div class="side-form-header">
+      <h2><mat-icon>{{ editMode ? 'edit' : 'add' }}</mat-icon> {{ editMode ? 'Modifier' : 'Nouveau' }} document</h2>
+      <button mat-icon-button (click)="closeForm()"><mat-icon>close</mat-icon></button>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="side-form-body">
+      <mat-form-field appearance="outline"><mat-label>Titre *</mat-label><input matInput formControlName="titre"><mat-error>Requis</mat-error></mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="outline"><mat-label>Type</mat-label><mat-select formControlName="type"><mat-option value="REUNION">Réunion</mat-option><mat-option value="CIRCULAIRE">Circulaire</mat-option><mat-option value="SEMINAIRE">Séminaire</mat-option><mat-option value="WEBINAIRE">Webinaire</mat-option><mat-option value="CONSEIL">Conseil</mat-option><mat-option value="AUTRE">Autre</mat-option></mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Date</mat-label><input matInput type="date" formControlName="date"></mat-form-field>
+      </div>
+      <mat-form-field appearance="outline"><mat-label>Contenu</mat-label><textarea matInput formControlName="contenu" rows="4"></textarea></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Destinataires</mat-label><mat-select formControlName="roleCible"><mat-option value="ALL">Tous</mat-option><mat-option value="ADMIN">Administration</mat-option><mat-option value="ENSEIGNANT">Enseignants</mat-option><mat-option value="ETUDIANT">Étudiants</mat-option></mat-select></mat-form-field>
+      <mat-checkbox formControlName="publie" color="primary">Publier immédiatement</mat-checkbox>
+      <div class="form-actions">
+        <button mat-button type="button" (click)="closeForm()">Annuler</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          <mat-spinner diameter="18" *ngIf="saving"></mat-spinner>
+          <mat-icon *ngIf="!saving">save</mat-icon> {{ saving ? 'En cours...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
